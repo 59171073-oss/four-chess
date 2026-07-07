@@ -1,0 +1,6 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- 基于 Material3 的应用主题 (Compose 在运行时接管实际配色) -->
+    <style name="Theme.Connect4Kids" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor" tools:targetApi="l">@color/purple_700</item>
+    </style>
+</resources>
