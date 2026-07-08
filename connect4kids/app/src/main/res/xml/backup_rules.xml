@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!--
+      配置 Cloud Backup / device-transfer 时需要排除的规则。
+      目前允许全部备份；如有敏感数据 (如 API Key) 可在此排除对应 SharedPreferences。
+    -->
+</full-backup-content>
