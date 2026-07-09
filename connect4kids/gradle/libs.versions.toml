@@ -1,7 +1,6 @@
 [versions]
-agp = "8.1.4"
-kotlin = "1.9.22"
-composeCompiler = "1.5.8"
+agp = "8.13.2"
+kotlin = "2.0.21"
 coreKtx = "1.12.0"
 lifecycle = "2.7.0"
 activityCompose = "1.8.2"
@@ -51,3 +50,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
