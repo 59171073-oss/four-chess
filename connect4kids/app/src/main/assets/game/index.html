@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>重力四子棋 - 儿童版</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1 { color: #FF6B6B; font-size: 1.8em; margin-bottom: 6px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+  .subtitle { color: #555; font-size: 1em; margin-bottom: 14px; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+    margin-bottom: 14px; background: rgba(255,255,255,0.85);
+    padding: 12px 16px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .control-group { display: flex; align-items: center; gap: 6px; }
+  label { font-size: 0.95em; color: #333; font-weight: 600; }
+  select, button {
+    font-size: 0.95em; padding: 8px 16px; border: none; border-radius: 22px;
+    cursor: pointer; font-weight: 600; transition: all 0.2s;
+  }
+  select { background: #FFF9C4; color: #F57C00; border: 2px solid #FFB74D; }
+  select:hover { background: #FFF59D; }
+  .btn-primary { background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; box-shadow: 0 4px 12px rgba(255,107,107,0.4); }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-secondary { background: linear-gradient(135deg, #4ECDC4, #44A08D); color: white; box-shadow: 0 4px 12px rgba(78,205,196,0.4); }
+  .btn-secondary:hover { transform: translateY(-2px); }
+  .status {
+    background: rgba(255,255,255,0.9); padding: 12px 24px; border-radius: 26px;
+    font-size: 1.15em; font-weight: bold; color: #333; margin-bottom: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-height: 46px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .turn-indicator { display: inline-block; width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .board-wrapper { background: #1E88E5; padding: 12px; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+  .board {
+    display: grid; grid-template-columns: repeat(7, 46px); grid-template-rows: repeat(6, 46px);
+    gap: 5px; background: #1565C0; padding: 8px; border-radius: 12px;
+  }
+  .cell {
+    background: #0D47A1; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.2s;
+  }
+  .cell.empty::before {
+    content: ''; position: absolute; width: 72%; height: 72%; border-radius: 50%;
+    background: #E3F2FD; box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .cell.player-red::before {
+    content: ''; position: absolute; width: 76%; height: 76%; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #FF8A80, #D32F2F 70%);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.2);
+  }
+  .cell.player-yellow::before {
+    content: ''; position: absolute; width: 76%; height: 76%; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #FFFF8D, #FBC02D 70%);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.2);
+  }
+  .cell.win::before { animation: winPulse 0.8s ease-in-out infinite alternate; }
+  @keyframes winPulse {
+    from { transform: scale(1); box-shadow: 0 0 0 0 rgba(76,175,80,0.7); }
+    to { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(76,175,80,0); }
+  }
+  .cell.drop { animation: drop 0.5s ease-in; }
+  @keyframes drop {
+    from { transform: translateY(-400px); opacity: 0.5; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .scoreboard {
+    display: flex; gap: 20px; margin-top: 14px; background: rgba(255,255,255,0.85);
+    padding: 12px 24px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .score-item { text-align: center; }
+  .score-item .label { font-size: 0.85em; color: #666; margin-bottom: 4px; }
+  .score-item .value { font-size: 1.6em; font-weight: bold; }
+  .score-item.red .value { color: #D32F2F; }
+  .score-item.yellow .value { color: #FBC02D; }
+  .score-item.draw .value { color: #9E9E9E; }
+  .tips {
+    margin-top: 14px; max-width: 480px; background: rgba(255,255,255,0.85);
+    padding: 12px 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .tips h3 { color: #FF6B6B; margin-bottom: 6px; font-size: 1em; }
+  .tips p { color: #555; line-height: 1.6; font-size: 0.9em; }
+  .api-section {
+    margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.6);
+    border-radius: 10px; font-size: 0.85em;
+  }
+  .api-section input { width: 100%; padding: 6px 8px; margin: 3px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9em; }
+  .api-section button { font-size: 0.85em; padding: 6px 12px; }
+  .api-toggle { cursor: pointer; color: #1976D2; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <h1>🎮 重力四子棋</h1>
+  <div class="subtitle">小朋友，来和电脑下棋吧！</div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>🎯 难度：</label>
+      <select id="difficulty">
+        <option value="beginner">入门</option>
+        <option value="easy">简单</option>
+        <option value="normal" selected>普通</option>
+        <option value="hard">困难</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="restartBtn">🔄 重新开始</button>
+    <button class="btn-secondary" id="undoBtn">↩️ 悔棋</button>
+  </div>
+
+  <div class="status" id="status">
+    <span class="turn-indicator" style="background: radial-gradient(circle at 30% 30%, #FF8A80, #D32F2F 70%);"></span>
+    <span id="statusText">你的回合！</span>
+  </div>
+
+  <div class="board-wrapper">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-item red"><div class="label">🏆 你赢</div><div class="value" id="winCount">0</div></div>
+    <div class="score-item yellow"><div class="label">🤖 电脑赢</div><div class="value" id="loseCount">0</div></div>
+    <div class="score-item draw"><div class="label">🤝 平局</div><div class="value" id="drawCount">0</div></div>
+  </div>
+
+  <div class="tips" id="tips">
+    <h3>💡 小贴士</h3>
+    <p>点击任意列，让你的棋子落下。让 4 个同色棋子连成一条线（横、竖、斜着都可以）就能获胜！</p>
+    <p style="margin-top:8px;"><span class="api-toggle" onclick="document.getElementById('apiConfig').style.display=document.getElementById('apiConfig').style.display==='none'?'block':'none'">⚙️ 高级：使用大模型 AI（可选）</span></p>
+    <div id="apiConfig" style="display:none;" class="api-section">
+      <input id="apiEndpoint" placeholder="API 地址（如 https://api.openai.com/v1/chat/completions）">
+      <input id="apiKey" type="password" placeholder="API Key">
+      <input id="apiModel" placeholder="模型名（如 gpt-4o-mini）">
+      <button class="btn-secondary" onclick="saveApiConfig()">💾 保存配置</button>
+      <button class="btn-primary" onclick="toggleLlm()">启用大模型 AI</button>
+      <p id="apiStatus" style="margin-top:6px;color:#666;"></p>
+    </div>
+  </div>
+
+<script>
+const ROWS = 6, COLS = 7, PLAYER = 1, AI = 2, EMPTY = 0;
+let board = [], currentPlayer = PLAYER, gameOver = false, moveHistory = [];
+let scores = { win: 0, lose: 0, draw: 0 };
+const winningCells = [];
+let useLlm = false;
+let apiConfig = { endpoint: '', apiKey: '', model: '' };
+
+function initBoard() {
+  board = Array(ROWS).fill(null).map(() => Array(COLS).fill(EMPTY));
+  currentPlayer = PLAYER; gameOver = false; moveHistory = []; winningCells.length = 0;
+  updateStatus('你的回合！', PLAYER); renderBoard();
+}
+function renderBoard() {
+  const boardEl = document.getElementById('board'); boardEl.innerHTML = '';
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell'; cell.dataset.row = row; cell.dataset.col = col;
+      if (board[row][col] === EMPTY) cell.classList.add('empty');
+      else if (board[row][col] === PLAYER) cell.classList.add('player-red');
+      else cell.classList.add('player-yellow');
+      if (winningCells.some(c => c.row === row && c.col === col)) cell.classList.add('win');
+      cell.addEventListener('click', () => handleClick(col));
+      boardEl.appendChild(cell);
+    }
+  }
+}
+function handleClick(col) {
+  if (gameOver || currentPlayer !== PLAYER) return;
+  dropPiece(col, PLAYER);
+}
+function dropPiece(col, player) {
+  for (let row = ROWS - 1; row >= 0; row--) {
+    if (board[row][col] === EMPTY) {
+      board[row][col] = player; moveHistory.push({ row, col, player });
+      renderBoard(); animateDrop(row, col); checkGameEnd();
+      if (!gameOver) {
+        currentPlayer = currentPlayer === PLAYER ? AI : PLAYER;
+        updateStatus(currentPlayer === PLAYER ? '你的回合！' : '电脑思考中...', currentPlayer);
+        if (currentPlayer === AI) setTimeout(aiMove, 500);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+function animateDrop(row, col) {
+  const cells = document.querySelectorAll('.cell');
+  const index = row * COLS + col;
+  if (cells[index]) { cells[index].classList.add('drop'); setTimeout(() => cells[index].classList.remove('drop'), 500); }
+}
+function checkGameEnd() {
+  const winner = checkWin();
+  if (winner) {
+    gameOver = true; renderBoard();
+    if (winner === PLAYER) {
+      scores.win++; updateStatus('🎉 你赢啦！太棒了！', PLAYER);
+      updateTips('你真厉害！试着挑战更高难度吧？');
+    } else {
+      scores.lose++; updateStatus('电脑赢了，下次加油！💪', AI);
+      updateTips('没关系，每一次失败都是学习的机会。试着防守对手的威胁！');
+    }
+    updateScores(); return;
+  }
+  if (isBoardFull()) {
+    gameOver = true; scores.draw++;
+    updateStatus('🤝 平局！再来一局！', null);
+    updateTips('势均力敌！这是一场精彩的对局。'); updateScores();
+  }
+}
+function checkWin() {
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const player = board[row][col];
+      if (player === EMPTY) continue;
+      for (const [dr, dc] of [[0,1],[1,0],[1,1],[1,-1]]) {
+        const cells = []; let count = 0;
+        for (let i = 0; i < 4; i++) {
+          const r = row + i*dr, c = col + i*dc;
+          if (r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===player) { count++; cells.push({row:r,col:c}); }
+          else break;
+        }
+        if (count >= 4) { winningCells.length = 0; winningCells.push(...cells); return player; }
+      }
+    }
+  }
+  return null;
+}
+function isBoardFull() {
+  for (let col = 0; col < COLS; col++) if (board[0][col] === EMPTY) return false;
+  return true;
+}
+function aiMove() {
+  if (gameOver) return;
+  if (useLlm && apiConfig.endpoint && apiConfig.apiKey) {
+    llmMove(); return;
+  }
+  const difficulty = document.getElementById('difficulty').value;
+  let col;
+  if (difficulty === 'beginner') col = aiBeginner();
+  else if (difficulty === 'easy') col = aiEasy();
+  else if (difficulty === 'normal') col = minimax(3, -Infinity, Infinity, true).col;
+  else col = minimax(5, -Infinity, Infinity, true).col;
+  if (col != null) dropPiece(col, AI);
+}
+function aiBeginner() {
+  if (Math.random() < 0.4) return getRandomCol();
+  const winCol = findWinningMove(AI); if (winCol != null) return winCol;
+  const blockCol = findWinningMove(PLAYER);
+  if (blockCol != null && Math.random() < 0.5) return blockCol;
+  return getRandomCol();
+}
+function aiEasy() {
+  if (Math.random() < 0.2) return getRandomCol();
+  const winCol = findWinningMove(AI); if (winCol != null) return winCol;
+  const blockCol = findWinningMove(PLAYER); if (blockCol != null) return blockCol;
+  for (const c of [3, 2, 4, 1, 5, 0, 6]) if (board[0][c] === EMPTY) return c;
+  return getRandomCol();
+}
+function getRandomCol() {
+  const available = [];
+  for (let c = 0; c < COLS; c++) if (board[0][c] === EMPTY) available.push(c);
+  return available[Math.floor(Math.random() * available.length)];
+}
+function findWinningMove(player) {
+  for (let col = 0; col < COLS; col++) {
+    if (board[0][col] !== EMPTY) continue;
+    const row = getDropRow(col);
+    board[row][col] = player;
+    const won = checkWinQuick(row, col, player);
+    board[row][col] = EMPTY;
+    if (won) return col;
+  }
+  return null;
+}
+function getDropRow(col) {
+  for (let row = ROWS - 1; row >= 0; row--) if (board[row][col] === EMPTY) return row;
+  return -1;
+}
+function checkWinQuick(row, col, player) {
+  for (const [dr, dc] of [[0,1],[1,0],[1,1],[1,-1]]) {
+    let count = 1;
+    for (let i = 1; i < 4; i++) {
+      const r = row + i*dr, c = col + i*dc;
+      if (r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===player) count++; else break;
+    }
+    for (let i = 1; i < 4; i++) {
+      const r = row - i*dr, c = col - i*dc;
+      if (r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===player) count++; else break;
+    }
+    if (count >= 4) return true;
+  }
+  return false;
+}
+function minimax(depth, alpha, beta, isMaximizing) {
+  const winner = checkWin();
+  if (winner === AI) return { score: 1000 + depth, col: null };
+  if (winner === PLAYER) return { score: -1000 - depth, col: null };
+  if (isBoardFull()) return { score: 0, col: null };
+  if (depth === 0) return { score: evaluateBoard(), col: null };
+  const centerCols = [3, 2, 4, 1, 5, 0, 6];
+  let bestCol = centerCols.find(c => board[0][c] === EMPTY);
+  if (isMaximizing) {
+    let maxScore = -Infinity;
+    for (const col of centerCols) {
+      if (board[0][col] !== EMPTY) continue;
+      const row = getDropRow(col);
+      board[row][col] = AI;
+      const score = minimax(depth - 1, alpha, beta, false).score;
+      board[row][col] = EMPTY;
+      if (score > maxScore) { maxScore = score; bestCol = col; }
+      alpha = Math.max(alpha, score);
+      if (beta <= alpha) break;
+    }
+    return { score: maxScore, col: bestCol };
+  } else {
+    let minScore = Infinity;
+    for (const col of centerCols) {
+      if (board[0][col] !== EMPTY) continue;
+      const row = getDropRow(col);
+      board[row][col] = PLAYER;
+      const score = minimax(depth - 1, alpha, beta, true).score;
+      board[row][col] = EMPTY;
+      if (score < minScore) { minScore = score; bestCol = col; }
+      beta = Math.min(beta, score);
+      if (beta <= alpha) break;
+    }
+    return { score: minScore, col: bestCol };
+  }
+}
+function evaluateBoard() {
+  let score = 0;
+  score += evaluateWindows(AI) - evaluateWindows(PLAYER);
+  for (let row = 0; row < ROWS; row++) {
+    if (board[row][3] === AI) score += 6;
+    else if (board[row][3] === PLAYER) score -= 6;
+  }
+  return score;
+}
+function evaluateWindows(player) {
+  let score = 0;
+  for (let row = 0; row < ROWS; row++)
+    for (let col = 0; col <= COLS - 4; col++)
+      score += windowScore([board[row][col], board[row][col+1], board[row][col+2], board[row][col+3]], player);
+  for (let col = 0; col < COLS; col++)
+    for (let row = 0; row <= ROWS - 4; row++)
+      score += windowScore([board[row][col], board[row+1][col], board[row+2][col], board[row+3][col]], player);
+  for (let row = 3; row < ROWS; row++)
+    for (let col = 0; col <= COLS - 4; col++)
+      score += windowScore([board[row][col], board[row-1][col+1], board[row-2][col+2], board[row-3][col+3]], player);
+  for (let row = 0; row <= ROWS - 4; row++)
+    for (let col = 0; col <= COLS - 4; col++)
+      score += windowScore([board[row][col], board[row+1][col+1], board[row+2][col+2], board[row+3][col+3]], player);
+  return score;
+}
+function windowScore(window, player) {
+  const opp = player === AI ? PLAYER : AI;
+  const pc = window.filter(c => c === player).length;
+  const oc = window.filter(c => c === opp).length;
+  const ec = window.filter(c => c === EMPTY).length;
+  if (pc === 4) return 100;
+  if (pc === 3 && ec === 1) return 10;
+  if (pc === 2 && ec === 2) return 3;
+  if (oc === 3 && ec === 1) return -8;
+  return 0;
+}
+function boardToVisual() {
+  let s = '';
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const v = board[row][col];
+      s += v === PLAYER ? '🔴' : v === AI ? '🟡' : '⬜';
+    }
+    s += '\n';
+  }
+  return s;
+}
+async function llmMove() {
+  updateStatus('🤖 大模型思考中...', AI);
+  const prompt = '你是重力四子棋(Connect-4) AI。棋盘 7列x6行，列号0-6(左到右)，行号0-5(下到上)。你是🟡(玩家2)，对手是🔴(玩家1)。\n\n当前棋盘(⬜为空):\n' + boardToVisual() + '\n请只返回一个0-6的整数表示你要落子的列号。';
+  try {
+    const res = await fetch(apiConfig.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiConfig.apiKey },
+      body: JSON.stringify({ model: apiConfig.model, messages: [{ role: 'user', content: prompt }], max_tokens: 20, temperature: 0.7 })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const text = data.choices[0].message.content;
+    const m = text.match(/\d/);
+    if (!m) throw new Error('无法解析列号');
+    let col = parseInt(m[0]);
+    if (col < 0 || col >= COLS || board[0][col] !== EMPTY) throw new Error('非法列号');
+    dropPiece(col, AI);
+  } catch (e) {
+    document.getElementById('apiStatus').textContent = '⚠️ 大模型调用失败，回退到本地AI: ' + e.message;
+    const difficulty = document.getElementById('difficulty').value;
+    let col = difficulty === 'hard' ? minimax(5, -Infinity, Infinity, true).col
+            : difficulty === 'normal' ? minimax(3, -Infinity, Infinity, true).col
+            : difficulty === 'easy' ? aiEasy() : aiBeginner();
+    if (col != null) dropPiece(col, AI);
+  }
+}
+function updateStatus(text, player) {
+  document.getElementById('statusText').textContent = text;
+  const indicator = document.querySelector('.turn-indicator');
+  if (player === PLAYER) indicator.style.background = 'radial-gradient(circle at 30% 30%, #FF8A80, #D32F2F 70%)';
+  else if (player === AI) indicator.style.background = 'radial-gradient(circle at 30% 30%, #FFFF8D, #FBC02D 70%)';
+}
+function updateScores() {
+  document.getElementById('winCount').textContent = scores.win;
+  document.getElementById('loseCount').textContent = scores.lose;
+  document.getElementById('drawCount').textContent = scores.draw;
+}
+function updateTips(text) {
+  const apiHtml = '<p style="margin-top:8px;"><span class="api-toggle" onclick="document.getElementById(\'apiConfig\').style.display=document.getElementById(\'apiConfig\').style.display===\'none\'?\'block\':\'none\'">⚙️ 高级：使用大模型 AI（可选）</span></p><div id="apiConfig" style="display:none;" class="api-section"><input id="apiEndpoint" placeholder="API 地址（如 https://api.openai.com/v1/chat/completions）"><input id="apiKey" type="password" placeholder="API Key"><input id="apiModel" placeholder="模型名（如 gpt-4o-mini）"><button class="btn-secondary" onclick="saveApiConfig()">💾 保存配置</button><button class="btn-primary" onclick="toggleLlm()">启用大模型 AI</button><p id="apiStatus" style="margin-top:6px;color:#666;"></p></div>';
+  document.getElementById('tips').innerHTML = '<h3>💡 小贴士</h3><p>' + text + '</p>' + apiHtml;
+  if (apiConfig.endpoint) document.getElementById('apiEndpoint').value = apiConfig.endpoint;
+  if (apiConfig.apiKey) document.getElementById('apiKey').value = apiConfig.apiKey;
+  if (apiConfig.model) document.getElementById('apiModel').value = apiConfig.model;
+  if (useLlm) document.getElementById('apiStatus').textContent = '✅ 大模型 AI 已启用 (' + apiConfig.model + ')';
+}
+function saveApiConfig() {
+  apiConfig.endpoint = document.getElementById('apiEndpoint').value.trim();
+  apiConfig.apiKey = document.getElementById('apiKey').value.trim();
+  apiConfig.model = document.getElementById('apiModel').value.trim();
+  document.getElementById('apiStatus').textContent = '💾 配置已保存';
+}
+function toggleLlm() {
+  if (!apiConfig.endpoint || !apiConfig.apiKey || !apiConfig.model) {
+    document.getElementById('apiStatus').textContent = '⚠️ 请先填写并保存配置';
+    return;
+  }
+  useLlm = !useLlm;
+  document.getElementById('apiStatus').textContent = useLlm ? '✅ 大模型 AI 已启用 (' + apiConfig.model + ')' : '🔄 已切换回本地 AI';
+}
+function undo() {
+  if (moveHistory.length < 2) {
+    if (moveHistory.length >= 1 && !gameOver) {
+      const last = moveHistory.pop();
+      board[last.row][last.col] = EMPTY;
+      currentPlayer = last.player;
+      updateStatus(currentPlayer === PLAYER ? '你的回合！' : '电脑思考中...', currentPlayer);
+      renderBoard();
+    }
+    return;
+  }
+  const aiM = moveHistory.pop(); board[aiM.row][aiM.col] = EMPTY;
+  const pM = moveHistory.pop(); board[pM.row][pM.col] = EMPTY;
+  currentPlayer = PLAYER; gameOver = false; winningCells.length = 0;
+  updateStatus('你的回合！', PLAYER);
+  renderBoard();
+}
+document.getElementById('restartBtn').addEventListener('click', initBoard);
+document.getElementById('undoBtn').addEventListener('click', undo);
+initBoard();
+</script>
+</body>
+</html>
